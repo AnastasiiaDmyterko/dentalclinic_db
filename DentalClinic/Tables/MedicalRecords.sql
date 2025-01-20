@@ -1,0 +1,25 @@
+CREATE TABLE MedicalRecords (
+    RecordID INT PRIMARY KEY,
+    PatientID INT,
+    MedicalHistory TEXT,
+    Allergies TEXT
+);
+
+CREATE TABLE dbo.Department
+(
+    DeptID int NOT NULL PRIMARY KEY CLUSTERED,
+    DeptName VARCHAR(50) NOT NULL,
+    ManagerID INT NULL,
+    ParentDeptID INT NULL
+)
+
+ALTER TABLE dbo.Department ADD
+ValidFrom DATETIME2 GENERATED ALWAYS AS ROW START HIDDEN
+    CONSTRAINT DF_Department_ValidFrom DEFAULT SYSUTCDATETIME(),
+ValidTo DATETIME2 GENERATED ALWAYS AS ROW END HIDDEN
+    CONSTRAINT DF_Department_ValidTo DEFAULT CONVERT(DATETIME2, '9999-12-31 23:59:59.9999999'),
+PERIOD FOR SYSTEM_TIME(ValidFrom, ValidTo);
+GO
+
+ALTER TABLE dbo.Department
+    SET (SYSTEM_VERSIONING = ON (HISTORY_TABLE = dbo.Department_History));
