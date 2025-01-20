@@ -1,0 +1,69 @@
+-- Список всіх пацієнтів з їхніми медичними записами
+SELECT 
+    P.PatientID,
+    P.FirstName,
+    P.LastName,
+    M.MedicalHistory,
+    M.Allergies
+FROM 
+    Patients P
+LEFT JOIN 
+    MedicalRecords M ON P.PatientID = M.PatientID;
+
+
+-- Записи на прийом із даними про стоматологівякі їх проводять
+SELECT 
+    A.AppointmentID,
+    A.AppointmentDate,
+    D.FirstName AS DentistFirstName,
+    D.LastName AS DentistLastName,
+    A.Status
+FROM 
+    Appointments A
+JOIN 
+    Dentists D ON A.DentistID = D.DentistID;
+
+
+-- Платежі за рахунками разом з даними про пацієнтів
+SELECT 
+    P.FirstName AS PatientFirstName,
+    P.LastName AS PatientLastName,
+    I.InvoiceID,
+    P.PaymentAmount,
+    P.PaymentDate
+FROM 
+    Payments P
+JOIN 
+    Invoices I ON P.InvoiceID = I.InvoiceID
+JOIN 
+    Patients P2 ON I.PatientID = P2.PatientID;
+
+
+-- Відгуки пацієнтів з інформацією про прийоми до яких вони відносяться
+SELECT 
+    F.FeedbackID,
+    F.FeedbackText,
+    F.Rating,
+    A.AppointmentDate,
+    P.FirstName AS PatientFirstName,
+    P.LastName AS PatientLastName
+FROM 
+    PatientFeedback F
+JOIN 
+    Appointments A ON F.AppointmentID = A.AppointmentID
+JOIN 
+    Patients P ON F.PatientID = P.PatientID;
+
+
+-- Всі процедури які були проведені на прийомах
+SELECT 
+    A.AppointmentDate,
+    P.ProcedureName,
+    R.Notes
+FROM 
+    AppointmentRecords R
+JOIN 
+    Appointments A ON R.AppointmentID = A.AppointmentID
+JOIN 
+    Procedures P ON R.ProcedureID = P.ProcedureID;
+
