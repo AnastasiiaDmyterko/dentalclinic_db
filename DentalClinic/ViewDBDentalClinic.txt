@@ -1,0 +1,71 @@
+CREATE VIEW vw_PatientMedicalRecords AS 
+SELECT 
+    Patients.PatientID,
+    Patients.FirstName,
+    Patients.LastName,
+    MedicalRecords.MedicalHistory,
+    MedicalRecords.Allergies
+FROM 
+    Patients
+LEFT JOIN 
+    MedicalRecords ON Patients.PatientID = MedicalRecords.PatientID;
+
+
+CREATE VIEW vw_AppointmentWithDentist AS 
+SELECT 
+    Appointments.AppointmentID,
+    Appointments.AppointmentDate,
+    Dentists.FirstName AS DentistFirstName,
+    Dentists.LastName AS DentistLastName,
+    Appointments.Status
+FROM 
+    Appointments
+JOIN 
+    Dentists ON Appointments.DentistID = Dentists.DentistID;
+
+
+CREATE VIEW vw_PatientPayments AS 
+SELECT 
+    Patients.FirstName AS PatientFirstName,
+    Patients.LastName AS PatientLastName,
+    Invoices.InvoiceID,
+    Payments.PaymentAmount,
+    Payments.PaymentDate
+FROM 
+    Payments
+JOIN 
+    Invoices ON Payments.InvoiceID = Invoices.InvoiceID
+JOIN 
+    Patients ON Invoices.PatientID = Patients.PatientID;
+
+
+
+CREATE VIEW vw_PatientFeedbackWithAppointments AS 
+SELECT 
+    PatientFeedback.FeedbackID,
+    PatientFeedback.FeedbackText,
+    PatientFeedback.Rating,
+    Appointments.AppointmentDate,
+    Patients.FirstName AS PatientFirstName,
+    Patients.LastName AS PatientLastName
+FROM 
+    PatientFeedback
+JOIN 
+    Appointments ON PatientFeedback.AppointmentID = Appointments.AppointmentID
+JOIN 
+    Patients ON PatientFeedback.PatientID = Patients.PatientID;
+
+
+
+CREATE VIEW vw_ProceduresOnAppointments AS 
+SELECT 
+    Appointments.AppointmentDate,
+    Procedures.ProcedureName,
+    AppointmentRecords.Notes
+FROM 
+    AppointmentRecords
+JOIN 
+    Appointments ON AppointmentRecords.AppointmentID = Appointments.AppointmentID
+JOIN 
+    Procedures ON AppointmentRecords.ProcedureID = Procedures.ProcedureID;
+

@@ -1,0 +1,66 @@
+CREATE OR ALTER PROCEDURE sp_SetPatients
+@PatientID INT = NULL OUTPUT,
+@FirstName VARCHAR(255)= NULL,
+@LastName VARCHAR(255)= NULL,
+@DateOfBirth DATE = NULL
+AS
+BEGIN 
+BEGIN TRY
+IF @PatientID IS NULL
+BEGIN 
+-- SET @PatientID = 1 + ISNULL((SELECT TOP(1) PatientID FROM Patients ORDER BY PatientID DESC),0)
+INSERT Patients ( FirstName, LastName, DateOfBirth)
+VALUES ( @FirstName, @LastName, @DateOfBirth)
+END
+ELSE
+UPDATE TOP(1) Patients
+SET FirstName = ISNULL (@FirstName, FirstName),
+	LastName = ISNULL (@LastName, LastName),
+	DateOfBirth	= ISNULL (@DateOfBirth, DateOfBirth)
+WHERE PatientID = @PatientID
+END TRY
+BEGIN CATCH
+PRINT ERROR_MESSAGE()
+END CATCH 
+END
+
+
+
+CREATE OR ALTER PROCEDURE sp_SetDentists
+    @DentistID INT = NULL OUTPUT,
+    @FirstName VARCHAR(255) = NULL,
+    @LastName VARCHAR(255) = NULL,
+    @Specialty VARCHAR(255) = NULL,
+    @PhoneNumber VARCHAR(20) = NULL,
+    @Email VARCHAR(255) = NULL
+AS
+BEGIN
+    BEGIN TRY
+        IF @DentistID IS NULL
+        BEGIN
+            INSERT INTO Dentists (FirstName, LastName, Specialty, PhoneNumber, Email)
+            VALUES (@FirstName, @LastName, @Specialty, @PhoneNumber, @Email);
+
+            -- Повертаємо новий DentistID
+            SET @DentistID = SCOPE_IDENTITY();
+        END
+        ELSE
+        BEGIN
+            UPDATE Dentists
+            SET FirstName = ISNULL(@FirstName, FirstName),
+                LastName = ISNULL(@LastName, LastName),
+                Specialty = ISNULL(@Specialty, Specialty),
+                PhoneNumber = ISNULL(@PhoneNumber, PhoneNumber),
+                Email = ISNULL(@Email, Email)
+            WHERE DentistID = @DentistID;
+
+            IF @@ROWCOUNT = 0
+                THROW 50001, 'DentistID не знайдено для оновлення', 1;
+        END
+    END TRY
+    BEGIN CATCH
+        THROW;
+    END CATCH
+END;
+
+

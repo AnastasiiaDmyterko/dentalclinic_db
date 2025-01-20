@@ -1,0 +1,584 @@
+CREATE OR ALTER PROCEDURE sp_GetPatients
+    @PatientID INT = NULL,
+    @LastName VARCHAR(255) = NULL,
+    @PageNumber INT = 1,
+    @PageSize INT = 10,
+    @SortColumn VARCHAR(128) = 'PatientID',
+    @SortDirection BIT = 1 -- 1: ASC, 0: DESC
+AS 
+BEGIN 
+    
+    IF @PatientID IS NOT NULL AND NOT EXISTS (SELECT * FROM Patients WHERE PatientID = @PatientID)
+    BEGIN
+        PRINT 'Неправильний ID';
+        RETURN;
+    END 
+
+    DECLARE @Offset INT = (@PageNumber - 1) * @PageSize;
+
+    SELECT *,
+        COUNT(*) OVER() AS TotalRecords 
+    FROM Patients
+    WHERE (@PatientID IS NULL OR PatientID = @PatientID)
+      AND (@LastName IS NULL OR LastName LIKE @LastName + '%')
+    ORDER BY 
+        CASE WHEN @SortColumn = 'PatientID' AND @SortDirection = 1 THEN PatientID END ASC,
+        CASE WHEN @SortColumn = 'PatientID' AND @SortDirection = 0 THEN PatientID END DESC,
+        CASE WHEN @SortColumn = 'LastName' AND @SortDirection = 1 THEN LastName END ASC,
+        CASE WHEN @SortColumn = 'LastName' AND @SortDirection = 0 THEN LastName END DESC
+    OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+END;
+
+-- Виконання 
+EXEC sp_GetPatients @LastName = 'Василенко', @PageNumber = 1, @PageSize = 5, @SortColumn = 'LastName', @SortDirection = 1;
+
+EXEC sp_GetPatients @PatientID = 3;
+
+EXEC sp_GetPatients @PageNumber = 2, @PageSize = 3, @SortColumn = 'PatientID', @SortDirection = 0;
+
+
+
+CREATE OR ALTER PROCEDURE sp_GetDentists
+    @DentistID INT = NULL,
+    @LastName VARCHAR(255) = NULL,
+    @PageNumber INT = 1,
+    @PageSize INT = 10,
+    @SortColumn VARCHAR(128) = 'DentistID',
+    @SortDirection BIT = 1 
+AS 
+BEGIN 
+    IF @DentistID IS NOT NULL AND NOT EXISTS (SELECT * FROM Dentists WHERE DentistID = @DentistID)
+    BEGIN
+        PRINT 'Неправильний ID';
+        RETURN;
+    END 
+
+    DECLARE @Offset INT = (@PageNumber - 1) * @PageSize;
+
+    SELECT * ,
+        COUNT(*) OVER() AS TotalRecords
+    FROM Dentists
+    WHERE (@DentistID IS NULL OR DentistID = @DentistID)
+      AND (@LastName IS NULL OR LastName LIKE @LastName + '%')
+    ORDER BY 
+        CASE WHEN @SortColumn = 'DentistID' AND @SortDirection = 1 THEN DentistID END ASC,
+        CASE WHEN @SortColumn = 'DentistID' AND @SortDirection = 0 THEN DentistID END DESC,
+        CASE WHEN @SortColumn = 'LastName' AND @SortDirection = 1 THEN LastName END ASC,
+        CASE WHEN @SortColumn = 'LastName' AND @SortDirection = 0 THEN LastName END DESC
+    OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+END;
+
+-- Виконання 
+EXEC sp_GetDentists @LastName = 'Мельник', @PageNumber = 1, @PageSize = 10, @SortColumn = 'LastName', @SortDirection = 1;
+
+EXEC sp_GetDentists @PageNumber = 1, @PageSize = 5, @SortColumn = 'DentistID', @SortDirection = 0;
+
+EXEC sp_GetDentists @DentistID = 2, @PageNumber = 1, @PageSize = 5;
+
+
+CREATE OR ALTER PROCEDURE sp_GetAdministrators
+    @AdminID INT = NULL,
+    @LastName VARCHAR(255) = NULL,
+    @PageNumber INT = 1,
+    @PageSize INT = 10,
+    @SortColumn VARCHAR(128) = 'AdminID',
+    @SortDirection BIT = 1 
+AS 
+BEGIN 
+    IF @AdminID IS NOT NULL AND NOT EXISTS (SELECT * FROM Administrators WHERE AdminID = @AdminID)
+    BEGIN
+        PRINT 'Неправильний ID';
+        RETURN;
+    END 
+
+    DECLARE @Offset INT = (@PageNumber - 1) * @PageSize;
+
+    SELECT * ,
+        COUNT(*) OVER() AS TotalRecords
+    FROM Administrators
+    WHERE (@AdminID IS NULL OR AdminID = @AdminID)
+      AND (@LastName IS NULL OR LastName LIKE @LastName + '%')
+    ORDER BY 
+        CASE WHEN @SortColumn = 'AdminID' AND @SortDirection = 1 THEN AdminID END ASC,
+        CASE WHEN @SortColumn = 'AdminID' AND @SortDirection = 0 THEN AdminID END DESC,
+        CASE WHEN @SortColumn = 'LastName' AND @SortDirection = 1 THEN LastName END ASC,
+        CASE WHEN @SortColumn = 'LastName' AND @SortDirection = 0 THEN LastName END DESC
+    OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+END;
+
+-- Виконання 
+EXECUTE dbo.sp_GetAdministrators @AdminID = 1, @PageNumber = 1, @PageSize = 2, @SortDirection = 0, @SortColumn = 'AdminID';
+EXEC sp_GetAdministrators @PageNumber = 3, @PageSize = 4;
+
+
+
+CREATE OR ALTER PROCEDURE sp_GetAppointments
+    @AppointmentID INT = NULL,
+    @PatientID INT = NULL,
+    @DentistID INT = NULL,
+    @PageNumber INT = 1,
+    @PageSize INT = 10,
+    @SortColumn VARCHAR(128) = 'AppointmentID',
+    @SortDirection BIT = 1
+AS 
+BEGIN 
+    IF @AppointmentID IS NOT NULL AND NOT EXISTS (SELECT * FROM Appointments WHERE AppointmentID = @AppointmentID)
+    BEGIN
+        PRINT 'Неправильний ID';
+        RETURN;
+    END 
+
+    DECLARE @Offset INT = (@PageNumber - 1) * @PageSize;
+
+    SELECT * ,
+        COUNT(*) OVER() AS TotalRecords
+    FROM Appointments
+    WHERE (@AppointmentID IS NULL OR AppointmentID = @AppointmentID)
+      AND (@PatientID IS NULL OR PatientID = @PatientID)
+      AND (@DentistID IS NULL OR DentistID = @DentistID)
+    ORDER BY 
+        CASE WHEN @SortColumn = 'AppointmentID' AND @SortDirection = 1 THEN AppointmentID END ASC,
+        CASE WHEN @SortColumn = 'AppointmentID' AND @SortDirection = 0 THEN AppointmentID END DESC,
+        CASE WHEN @SortColumn = 'AppointmentDate' AND @SortDirection = 1 THEN AppointmentDate END ASC,
+        CASE WHEN @SortColumn = 'AppointmentDate' AND @SortDirection = 0 THEN AppointmentDate END DESC
+    OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+END;
+
+-- Виконання 
+EXEC sp_GetAppointments @AppointmentID = 5, @PageNumber = 1, @PageSize = 5, @SortColumn = 'AppointmentDate', @SortDirection = 1;
+EXECUTE dbo.sp_GetAppointments @PatientID = 2, @DentistID = 1, @PageNumber = 2, @PageSize = 3, @SortDirection = 0, @SortColumn = 'AppointmentID';
+EXEC sp_GetAppointments @PageNumber = 1, @PageSize = 10;
+EXEC sp_GetAppointments @DentistID = 3, @SortColumn = 'AppointmentDate', @SortDirection = 1, @PageSize = 4;
+
+
+CREATE OR ALTER PROCEDURE sp_GetProcedures
+    @ProcedureID INT = NULL,
+    @ProcedureName VARCHAR(255) = NULL,
+    @PageNumber INT = 1,
+    @PageSize INT = 10,
+    @SortColumn VARCHAR(128) = 'ProcedureID',
+    @SortDirection BIT = 1 
+AS 
+BEGIN 
+    IF @ProcedureID IS NOT NULL AND NOT EXISTS (SELECT * FROM Procedures WHERE ProcedureID = @ProcedureID)
+    BEGIN
+        PRINT 'Неправильний ID';
+        RETURN;
+    END 
+
+    DECLARE @Offset INT = (@PageNumber - 1) * @PageSize;
+
+    SELECT * ,
+        COUNT(*) OVER() AS TotalRecords
+    FROM Procedures
+    WHERE (@ProcedureID IS NULL OR ProcedureID = @ProcedureID)
+      AND (@ProcedureName IS NULL OR ProcedureName LIKE @ProcedureName + '%')
+    ORDER BY 
+        CASE WHEN @SortColumn = 'ProcedureID' AND @SortDirection = 1 THEN ProcedureID END ASC,
+        CASE WHEN @SortColumn = 'ProcedureID' AND @SortDirection = 0 THEN ProcedureID END DESC,
+        CASE WHEN @SortColumn = 'ProcedureName' AND @SortDirection = 1 THEN ProcedureName END ASC,
+        CASE WHEN @SortColumn = 'ProcedureName' AND @SortDirection = 0 THEN ProcedureName END DESC
+    OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+END;
+
+-- Виконання 
+EXEC sp_GetProcedures @ProcedureName = 'Пломбування', @PageNumber = 1, @PageSize = 5, @SortColumn = 'ProcedureName', @SortDirection = 1;
+EXECUTE dbo.sp_GetProcedures @ProcedureID = 3, @PageNumber = 2, @PageSize = 2, @SortDirection = 0, @SortColumn = 'ProcedureID';
+
+
+CREATE OR ALTER PROCEDURE sp_GetAppointmentRecords
+    @RecordID INT = NULL,
+    @AppointmentID INT = NULL,
+    @ProcedureID INT = NULL,
+    @PageNumber INT = 1,
+    @PageSize INT = 10,
+    @SortColumn VARCHAR(128) = 'RecordID',
+    @SortDirection BIT = 1 
+AS 
+BEGIN 
+    IF @RecordID IS NOT NULL AND NOT EXISTS (SELECT * FROM AppointmentRecords WHERE RecordID = @RecordID)
+    BEGIN
+        PRINT 'Неправильний ID';
+        RETURN;
+    END 
+
+    DECLARE @Offset INT = (@PageNumber - 1) * @PageSize;
+
+    SELECT * ,
+        COUNT(*) OVER() AS TotalRecords
+    FROM AppointmentRecords
+    WHERE (@RecordID IS NULL OR RecordID = @RecordID)
+      AND (@AppointmentID IS NULL OR AppointmentID = @AppointmentID)
+      AND (@ProcedureID IS NULL OR ProcedureID = @ProcedureID)
+    ORDER BY 
+        CASE WHEN @SortColumn = 'RecordID' AND @SortDirection = 1 THEN RecordID END ASC,
+        CASE WHEN @SortColumn = 'RecordID' AND @SortDirection = 0 THEN RecordID END DESC
+    OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+END;
+
+-- Виконання
+EXEC sp_GetAppointmentRecords @AppointmentID = 1, @PageNumber = 1, @PageSize = 5, @SortColumn = 'RecordID', @SortDirection = 1;
+EXECUTE dbo.sp_GetAppointmentRecords @RecordID = NULL, @ProcedureID = 2, @PageNumber = 2, @PageSize = 3, @SortColumn = 'Proce
+
+
+
+CREATE OR ALTER PROCEDURE sp_GetMedications
+    @MedicationID INT = NULL,
+    @ProcedureID INT = NULL,
+    @MedicationName VARCHAR(255) = NULL,
+    @PageNumber INT = 1,
+    @PageSize INT = 10,
+    @SortColumn VARCHAR(128) = 'MedicationID',
+    @SortDirection BIT = 1 
+AS 
+BEGIN 
+    IF @MedicationID IS NOT NULL AND NOT EXISTS (SELECT * FROM Medications WHERE MedicationID = @MedicationID)
+    BEGIN
+        PRINT 'Неправильний ID';
+        RETURN;
+    END 
+
+    DECLARE @Offset INT = (@PageNumber - 1) * @PageSize;
+
+    SELECT * ,
+        COUNT(*) OVER() AS TotalRecords
+    FROM Medications
+    WHERE (@MedicationID IS NULL OR MedicationID = @MedicationID)
+      AND (@ProcedureID IS NULL OR ProcedureID = @ProcedureID)
+      AND (@MedicationName IS NULL OR MedicationName LIKE @MedicationName + '%')
+    ORDER BY 
+        CASE WHEN @SortColumn = 'MedicationID' AND @SortDirection = 1 THEN MedicationID END ASC,
+        CASE WHEN @SortColumn = 'MedicationID' AND @SortDirection = 0 THEN MedicationID END DESC,
+        CASE WHEN @SortColumn = 'MedicationName' AND @SortDirection = 1 THEN MedicationName END ASC,
+        CASE WHEN @SortColumn = 'MedicationName' AND @SortDirection = 0 THEN MedicationName END DESC
+    OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+END;
+
+-- Виконання
+EXEC sp_GetMedications @MedicationName = 'Ібупрофен', @PageNumber = 1, @PageSize = 5, @SortColumn = 'MedicationName', @SortDirection = 1;
+EXECUTE dbo.sp_GetMedications @MedicationID = 3, @ProcedureID = NULL, @PageNumber = 1, @PageSize = 10, @SortDirection = 0, @SortColumn = 'ProcedureID';
+
+
+
+
+CREATE OR ALTER PROCEDURE sp_GetTreatmentPlans
+    @PlanID INT = NULL,
+    @PatientID INT = NULL,
+    @PageNumber INT = 1,
+    @PageSize INT = 10,
+    @SortColumn VARCHAR(128) = 'PlanID',
+    @SortDirection BIT = 1 
+AS 
+BEGIN 
+    IF @PlanID IS NOT NULL AND NOT EXISTS (SELECT * FROM TreatmentPlans WHERE PlanID = @PlanID)
+    BEGIN
+        PRINT 'Неправильний ID';
+        RETURN;
+    END 
+
+    DECLARE @Offset INT = (@PageNumber - 1) * @PageSize;
+
+    SELECT * ,
+        COUNT(*) OVER() AS TotalRecords
+    FROM TreatmentPlans
+    WHERE (@PlanID IS NULL OR PlanID = @PlanID)
+      AND (@PatientID IS NULL OR PatientID = @PatientID)
+    ORDER BY 
+        CASE WHEN @SortColumn = 'PlanID' AND @SortDirection = 1 THEN PlanID END ASC,
+        CASE WHEN @SortColumn = 'PlanID' AND @SortDirection = 0 THEN PlanID END DESC,
+        CASE WHEN @SortColumn = 'StartDate' AND @SortDirection = 1 THEN StartDate END ASC,
+        CASE WHEN @SortColumn = 'StartDate' AND @SortDirection = 0 THEN StartDate END DESC
+    OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+END;
+
+-- Виконання
+EXEC sp_GetTreatmentPlans @PatientID = 2, @PageNumber = 1, @PageSize = 4, @SortColumn = 'StartDate', @SortDirection = 1;
+EXECUTE dbo.sp_GetTreatmentPlans @PlanID = NULL, @PatientID = 5, @PageNumber = 1, @PageSize = 3, @SortDirection = 0, @SortColumn = 'PlanID';
+
+
+
+
+CREATE OR ALTER PROCEDURE sp_GetMedicalRecords
+    @RecordID INT = NULL,
+    @PatientID INT = NULL,
+    @PageNumber INT = 1,
+    @PageSize INT = 10,
+    @SortColumn VARCHAR(128) = 'RecordID',
+    @SortDirection BIT = 1
+AS 
+BEGIN 
+    IF @RecordID IS NOT NULL AND NOT EXISTS (SELECT * FROM MedicalRecords WHERE RecordID = @RecordID)
+    BEGIN
+        PRINT 'Неправильний ID';
+        RETURN;
+    END 
+
+    DECLARE @Offset INT = (@PageNumber - 1) * @PageSize;
+
+    SELECT * ,
+        COUNT(*) OVER() AS TotalRecords
+    FROM MedicalRecords
+    WHERE (@RecordID IS NULL OR RecordID = @RecordID)
+      AND (@PatientID IS NULL OR PatientID = @PatientID)
+    ORDER BY 
+        CASE WHEN @SortColumn = 'RecordID' AND @SortDirection = 1 THEN RecordID END ASC,
+        CASE WHEN @SortColumn = 'RecordID' AND @SortDirection = 0 THEN RecordID END DESC
+    OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+END;
+
+-- Виконання
+EXEC sp_GetMedicalRecords @PatientID = 2, @PageNumber = 1, @PageSize = 5, @SortColumn = 'RecordID', @SortDirection = 1;
+EXECUTE dbo.sp_GetMedicalRecords @RecordID = 3, @PatientID = NULL, @PageNumber = 2, @PageSize = 4, @SortColumn = 'RecordID', @SortDirection = 0;
+
+
+
+CREATE OR ALTER PROCEDURE sp_GetPatientFeedback
+    @FeedbackID INT = NULL,
+    @PatientID INT = NULL,
+    @PageNumber INT = 1,
+    @PageSize INT = 10,
+    @SortColumn VARCHAR(128) = 'FeedbackID',
+    @SortDirection BIT = 1
+AS 
+BEGIN 
+    IF @FeedbackID IS NOT NULL AND NOT EXISTS (SELECT * FROM PatientFeedback WHERE FeedbackID = @FeedbackID)
+    BEGIN
+        PRINT 'Неправильний ID';
+        RETURN;
+    END 
+
+    DECLARE @Offset INT = (@PageNumber - 1) * @PageSize;
+
+    SELECT * ,
+        COUNT(*) OVER() AS TotalRecords
+    FROM PatientFeedback
+    WHERE (@FeedbackID IS NULL OR FeedbackID = @FeedbackID)
+      AND (@PatientID IS NULL OR PatientID = @PatientID)
+    ORDER BY 
+        CASE WHEN @SortColumn = 'FeedbackID' AND @SortDirection = 1 THEN FeedbackID END ASC,
+        CASE WHEN @SortColumn = 'FeedbackID' AND @SortDirection = 0 THEN FeedbackID END DESC
+    OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+END;
+
+-- Виконання
+EXEC sp_GetPatientFeedback @PatientID = 1, @PageNumber = 1, @PageSize = 3, @SortColumn = 'FeedbackID', @SortDirection = 1;
+EXECUTE dbo.sp_GetPatientFeedback @FeedbackID = NULL, @PatientID = 4, @PageNumber = 1, @PageSize = 3, @SortColumn = 'FeedbackID', @SortDirection = 0;
+
+
+
+CREATE OR ALTER PROCEDURE sp_GetInvoices
+    @InvoiceID INT = NULL,
+    @PatientID INT = NULL,
+    @PageNumber INT = 1,
+    @PageSize INT = 10,
+    @SortColumn VARCHAR(128) = 'InvoiceID',
+    @SortDirection BIT = 1
+AS 
+BEGIN 
+    IF @InvoiceID IS NOT NULL AND NOT EXISTS (SELECT * FROM Invoices WHERE InvoiceID = @InvoiceID)
+    BEGIN
+        PRINT 'Неправильний ID';
+        RETURN;
+    END 
+
+    DECLARE @Offset INT = (@PageNumber - 1) * @PageSize;
+
+    SELECT * ,
+        COUNT(*) OVER() AS TotalRecords
+    FROM Invoices
+    WHERE (@InvoiceID IS NULL OR InvoiceID = @InvoiceID)
+      AND (@PatientID IS NULL OR PatientID = @PatientID)
+    ORDER BY 
+        CASE WHEN @SortColumn = 'InvoiceID' AND @SortDirection = 1 THEN InvoiceID END ASC,
+        CASE WHEN @SortColumn = 'InvoiceID' AND @SortDirection = 0 THEN InvoiceID END DESC,
+        CASE WHEN @SortColumn = 'InvoiceDate' AND @SortDirection = 1 THEN InvoiceDate END ASC,
+        CASE WHEN @SortColumn = 'InvoiceDate' AND @SortDirection = 0 THEN InvoiceDate END DESC
+    OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+END;
+
+-- Виконання
+EXEC sp_GetInvoices @PatientID = 5, @PageNumber = 1, @PageSize = 5, @SortColumn = 'InvoiceDate', @SortDirection = 1;
+EXECUTE dbo.sp_GetInvoices @InvoiceID = NULL, @PageNumber = 2, @PageSize = 3, @SortColumn = 'InvoiceID', @SortDirection = 0;
+
+
+
+CREATE OR ALTER PROCEDURE sp_GetPayments
+    @PaymentID INT = NULL,
+    @InvoiceID INT = NULL,
+    @PageNumber INT = 1,
+    @PageSize INT = 10,
+    @SortColumn VARCHAR(128) = 'PaymentID',
+    @SortDirection BIT = 1
+AS 
+BEGIN 
+    IF @PaymentID IS NOT NULL AND NOT EXISTS (SELECT * FROM Payments WHERE PaymentID = @PaymentID)
+    BEGIN
+        PRINT 'Неправильний ID';
+        RETURN;
+    END 
+
+    DECLARE @Offset INT = (@PageNumber - 1) * @PageSize;
+
+    SELECT * ,
+        COUNT(*) OVER() AS TotalRecords
+    FROM Payments
+    WHERE (@PaymentID IS NULL OR PaymentID = @PaymentID)
+      AND (@InvoiceID IS NULL OR InvoiceID = @InvoiceID)
+    ORDER BY 
+        CASE WHEN @SortColumn = 'PaymentID' AND @SortDirection = 1 THEN PaymentID END ASC,
+        CASE WHEN @SortColumn = 'PaymentID' AND @SortDirection = 0 THEN PaymentID END DESC,
+        CASE WHEN @SortColumn = 'PaymentDate' AND @SortDirection = 1 THEN PaymentDate END ASC,
+        CASE WHEN @SortColumn = 'PaymentDate' AND @SortDirection = 0 THEN PaymentDate END DESC
+    OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+END;
+
+-- Виконання
+EXEC sp_GetPayments @InvoiceID = 2, @PageNumber = 1, @PageSize = 5, @SortColumn = 'PaymentDate', @SortDirection = 1;
+EXECUTE dbo.sp_GetPayments @PaymentID = 7, @InvoiceID = NULL, @PageNumber = 1, @PageSize = 3, @SortColumn = 'PaymentID', @SortDirection = 0;
+
+
+
+
+CREATE OR ALTER PROCEDURE sp_GetSuppliers
+    @SupplierID INT = NULL,
+    @SupplierName VARCHAR(255) = NULL,
+    @PageNumber INT = 1,
+    @PageSize INT = 10,
+    @SortColumn VARCHAR(128) = 'SupplierID',
+    @SortDirection BIT = 1
+AS 
+BEGIN 
+    IF @SupplierID IS NOT NULL AND NOT EXISTS (SELECT * FROM Suppliers WHERE SupplierID = @SupplierID)
+    BEGIN
+        PRINT 'Неправильний ID';
+        RETURN;
+    END 
+
+    DECLARE @Offset INT = (@PageNumber - 1) * @PageSize;
+
+    SELECT *,
+        COUNT(*) OVER() AS TotalRecords
+    FROM Suppliers
+    WHERE (@SupplierID IS NULL OR SupplierID = @SupplierID)
+      AND (@SupplierName IS NULL OR SupplierName LIKE @SupplierName + '%')
+    ORDER BY 
+        CASE WHEN @SortColumn = 'SupplierID' AND @SortDirection = 1 THEN SupplierID END ASC,
+        CASE WHEN @SortColumn = 'SupplierID' AND @SortDirection = 0 THEN SupplierID END DESC,
+        CASE WHEN @SortColumn = 'SupplierName' AND @SortDirection = 1 THEN SupplierName END ASC,
+        CASE WHEN @SortColumn = 'SupplierName' AND @SortDirection = 0 THEN SupplierName END DESC
+    OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+END;
+
+-- Виконання
+EXEC sp_GetSuppliers @SupplierName = 'MediTech', @PageNumber = 1, @PageSize = 5, @SortColumn = 'SupplierName', @SortDirection = 1;
+EXECUTE dbo.sp_GetSuppliers @SupplierID = 3, @SupplierName = NULL, @PageNumber = 2, @PageSize = 4, @SortColumn = 'SupplierID', @SortDirection = 0;
+
+
+
+
+CREATE OR ALTER PROCEDURE sp_GetSupplies
+    @SupplyID INT = NULL,
+    @SupplyName VARCHAR(255) = NULL,
+    @PageNumber INT = 1,
+    @PageSize INT = 10,
+    @SortColumn VARCHAR(128) = 'SupplyID',
+    @SortDirection BIT = 1
+AS 
+BEGIN 
+    IF @SupplyID IS NOT NULL AND NOT EXISTS (SELECT * FROM Supplies WHERE SupplyID = @SupplyID)
+    BEGIN
+        PRINT 'Неправильний ID';
+        RETURN;
+    END 
+
+    DECLARE @Offset INT = (@PageNumber - 1) * @PageSize;
+
+    SELECT *,
+        COUNT(*) OVER() AS TotalRecords
+    FROM Supplies
+    WHERE (@SupplyID IS NULL OR SupplyID = @SupplyID)
+      AND (@SupplyName IS NULL OR SupplyName LIKE @SupplyName + '%')
+    ORDER BY 
+        CASE WHEN @SortColumn = 'SupplyID' AND @SortDirection = 1 THEN SupplyID END ASC,
+        CASE WHEN @SortColumn = 'SupplyID' AND @SortDirection = 0 THEN SupplyID END DESC,
+        CASE WHEN @SortColumn = 'SupplyName' AND @SortDirection = 1 THEN SupplyName END ASC,
+        CASE WHEN @SortColumn = 'SupplyName' AND @SortDirection = 0 THEN SupplyName END DESC
+    OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+END;
+
+-- Виконання
+EXEC sp_GetSupplies @SupplyName = 'Антисептик', @PageNumber = 1, @PageSize = 5, @SortColumn = 'SupplyName', @SortDirection = 1;
+EXECUTE dbo.sp_GetSupplies @SupplyID = 2, @PageNumber = 2, @PageSize = 4, @SortColumn = 'SupplyID', @SortDirection = 0;
+
+
+
+
+CREATE OR ALTER PROCEDURE sp_GetDentistSchedules
+    @ScheduleID INT = NULL,
+    @DentistID INT = NULL,
+    @PageNumber INT = 1,
+    @PageSize INT = 10,
+    @SortColumn VARCHAR(128) = 'ScheduleID',
+    @SortDirection BIT = 1
+AS 
+BEGIN 
+    IF @ScheduleID IS NOT NULL AND NOT EXISTS (SELECT * FROM DentistSchedules WHERE ScheduleID = @ScheduleID)
+    BEGIN
+        PRINT 'Неправильний ID';
+        RETURN;
+    END 
+
+    DECLARE @Offset INT = (@PageNumber - 1) * @PageSize;
+
+    SELECT *,
+        COUNT(*) OVER() AS TotalRecords
+    FROM DentistSchedules
+    WHERE (@ScheduleID IS NULL OR ScheduleID = @ScheduleID)
+      AND (@DentistID IS NULL OR DentistID = @DentistID)
+    ORDER BY 
+        CASE WHEN @SortColumn = 'ScheduleID' AND @SortDirection = 1 THEN ScheduleID END ASC,
+        CASE WHEN @SortColumn = 'ScheduleID' AND @SortDirection = 0 THEN ScheduleID END DESC,
+        CASE WHEN @SortColumn = 'DayOfWeek' AND @SortDirection = 1 THEN DayOfWeek END ASC,
+        CASE WHEN @SortColumn = 'DayOfWeek' AND @SortDirection = 0 THEN DayOfWeek END DESC
+    OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+END;
+
+-- Виконання
+EXEC sp_GetDentistSchedules @DentistID = 1, @PageNumber = 1, @PageSize = 5, @SortColumn = 'DayOfWeek', @SortDirection = 1;
+EXECUTE dbo.sp_GetDentistSchedules @ScheduleID = 4, @DentistID = NULL, @PageNumber = 2, @PageSize = 4, @SortColumn = 'ScheduleID', @SortDirection = 0;
+
+
+
+CREATE OR ALTER PROCEDURE sp_GetAppointmentStatus
+    @StatusID INT = NULL,
+    @StatusName VARCHAR(50) = NULL,
+    @PageNumber INT = 1,
+    @PageSize INT = 10,
+    @SortColumn VARCHAR(128) = 'StatusID',
+    @SortDirection BIT = 1
+AS 
+BEGIN 
+    IF @StatusID IS NOT NULL AND NOT EXISTS (SELECT * FROM AppointmentStatus WHERE StatusID = @StatusID)
+    BEGIN
+        PRINT 'Неправильний ID';
+        RETURN;
+    END 
+
+    DECLARE @Offset INT = (@PageNumber - 1) * @PageSize;
+
+    SELECT *,
+        COUNT(*) OVER() AS TotalRecords
+    FROM AppointmentStatus
+    WHERE (@StatusID IS NULL OR StatusID = @StatusID)
+      AND (@StatusName IS NULL OR StatusName LIKE @StatusName + '%')
+    ORDER BY 
+        CASE WHEN @SortColumn = 'StatusID' AND @SortDirection = 1 THEN StatusID END ASC,
+        CASE WHEN @SortColumn = 'StatusID' AND @SortDirection = 0 THEN StatusID END DESC,
+        CASE WHEN @SortColumn = 'StatusName' AND @SortDirection = 1 THEN StatusName END ASC,
+        CASE WHEN @SortColumn = 'StatusName' AND @SortDirection = 0 THEN StatusName END DESC
+    OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+END;
+
+-- Виконання
+EXEC sp_GetAppointmentStatus @StatusName = 'Заплановано', @PageNumber = 1, @PageSize = 5, @SortColumn = 'StatusName', @SortDirection = 1;
+EXECUTE dbo.sp_GetAppointmentStatus @StatusID = 2, @PageNumber = 2, @PageSize = 4, @SortColumn = 'StatusID', @SortDirection = 0;
